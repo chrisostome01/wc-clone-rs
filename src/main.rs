@@ -33,13 +33,42 @@ fn compute_stats(content: String) -> Stats {
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let file_path = &args[args.len() - 1];
-    // ["/Users/chrysostome/Documents/personal/coding-challenges-rs/target/debug/ccwc", "ccwc", "./test.txt"]
+    let mut args: Vec<String> = env::args().collect();
+    let file_path = args.pop().expect("Unable to get file :)");
+    let lines_count_flag = String::from("-l");
+    let byte_count_flag = String::from("-c");
+    let word_count_flag = String::from("-w");
+    let character_count_flag = String::from("-m");
+    let print_default = false;
 
-    // Reading a file
+    let mut show_total_bytes = false;
+    let mut show_total_lines = false;
+    let mut show_total_chars = false;
+    let mut show_total_words = false;
+
+    let mut output = String::from("");
+
+    if args.len() >= 2 {
+        args.drain(0..2);
+    }
+
+    if args.len() == 0 {
+        show_total_lines = true;
+        show_total_words = true;
+        show_total_chars = true;
+    }
+
+    println!("{:?}", args);
+
     let content = fs::read_to_string(file_path).expect("Unable to read the file.");
-
     let stats = compute_stats(content);
-    println!("{} {} {} {}", stats.total_lines, stats.total_words, stats.total_bytes, stats.total_chars);
+
+    if (args.contains(&lines_count_flag)) {}
+    // if (args.contains("-l")) {}
+    // if (args.contains("-l")) {}
+
+    println!(
+        "{:}, {:}, {:}, {:}",
+        stats.total_words, stats.total_lines, stats.total_bytes, stats.total_chars
+    )
 }
