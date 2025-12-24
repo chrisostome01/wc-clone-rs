@@ -22,16 +22,27 @@ fn compute_stats(content: &str) -> Stats {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let flags: Vec<&String> = args.iter().filter(|a| a.starts_with('-')).collect();
-    let file_path = args.iter().skip(2).find(|a| !a.starts_with('-'));
+    // For dev expreince replace 1 with 2 to skip to items
+    let file_path = args.iter().skip(1).find(|a| !a.starts_with('-'));
+
+    println!("{:?}", file_path);
+    println!("{:?}", args);
 
     // Read content from File or Stdin
     let content = match file_path {
-        Some(path) => fs::read_to_string(path).expect("Unable to read file"),
+        Some(path) => match fs::read_to_string(&path) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("ccwc: cannot read {}: {}", path, e);
+                std::process::exit(1);
+            }
+        },
         None => {
             let mut buffer = String::new();
-            io::stdin()
-                .read_to_string(&mut buffer)
-                .expect("Unable to read stdin");
+            if let Err(e) = io::stdin().read_to_string(&mut buffer) {
+                eprintln!("ccwc: failed to read stdin: {}", e);
+                std::process::exit(1);
+            }
             buffer
         }
     };
