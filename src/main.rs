@@ -63,9 +63,14 @@ fn main() {
     }
 
     // Add path at the end
-    if let Some(path) = file_path {
-        output.push(path.clone());
-    }
+    // if let Some(path) = file_path {
+    //     output.push(path.clone());
+    // }
+
+    match file_path {
+        Some(path) => output.push(path.to_string()),
+        None => {}
+    };
 
     println!("{}", output.join(" "));
 }
