@@ -1,74 +1,71 @@
-use std::{env, fs};
-
-/**
-
--c: Byte count
--l: Line count
--w: Word count
--m: Character count (multibyte safe)
-Default: Equivalent to -l -w -c
-Stdin: Reads from standard input if no filename is provided
-
-*/
+use std::{
+    env, fs,
+    io::{self, Read},
+};
 
 struct Stats {
-    total_words: usize,
-    total_lines: usize,
-    total_bytes: usize,
-    total_chars: usize,
+    words: usize,
+    lines: usize,
+    bytes: usize,
+    chars: usize,
 }
 
-fn compute_stats(content: String) -> Stats {
-    let total_words = content.split_whitespace().count();
-    let total_lines = content.lines().count();
-    let total_bytes = content.len();
-    let total_chars = content.chars().count();
-
+fn compute_stats(content: &str) -> Stats {
     Stats {
-        total_words,
-        total_lines,
-        total_bytes,
-        total_chars,
+        words: content.split_whitespace().count(),
+        lines: content.lines().count(),
+        bytes: content.len(),
+        chars: content.chars().count(),
     }
 }
 
 fn main() {
-    let mut args: Vec<String> = env::args().collect();
-    let file_path = args.pop().expect("Unable to get file :)");
-    let lines_count_flag = String::from("-l");
-    let byte_count_flag = String::from("-c");
-    let word_count_flag = String::from("-w");
-    let character_count_flag = String::from("-m");
-    let print_default = false;
+    let args: Vec<String> = env::args().collect();
+    let flags: Vec<&String> = args.iter().filter(|a| a.starts_with('-')).collect();
+    let file_path = args.iter().skip(2).find(|a| !a.starts_with('-'));
 
-    let mut show_total_bytes = false;
-    let mut show_total_lines = false;
-    let mut show_total_chars = false;
-    let mut show_total_words = false;
+    // Read content from File or Stdin
+    let content = match file_path {
+        Some(path) => fs::read_to_string(path).expect("Unable to read file"),
+        None => {
+            let mut buffer = String::new();
+            io::stdin()
+                .read_to_string(&mut buffer)
+                .expect("Unable to read stdin");
+            buffer
+        }
+    };
 
-    let mut output = String::from("");
+    let stats = compute_stats(&content);
 
-    if args.len() >= 2 {
-        args.drain(0..2);
+    // Determine what to display
+    let show_l = flags.contains(&&"-l".to_string());
+    let show_w = flags.contains(&&"-w".to_string());
+    let show_c = flags.contains(&&"-c".to_string());
+    let show_m = flags.contains(&&"-m".to_string());
+
+    // Default is -l -w -c
+    let default = !show_l && !show_w && !show_c && !show_m;
+
+    let mut output = Vec::new();
+
+    if show_l || default {
+        output.push(stats.lines.to_string());
+    }
+    if show_w || default {
+        output.push(stats.words.to_string());
+    }
+    if show_c || default {
+        output.push(stats.bytes.to_string());
+    }
+    if show_m {
+        output.push(stats.chars.to_string());
     }
 
-    if args.len() == 0 {
-        show_total_lines = true;
-        show_total_words = true;
-        show_total_chars = true;
+    // Add path at the end
+    if let Some(path) = file_path {
+        output.push(path.clone());
     }
 
-    println!("{:?}", args);
-
-    let content = fs::read_to_string(file_path).expect("Unable to read the file.");
-    let stats = compute_stats(content);
-
-    if (args.contains(&lines_count_flag)) {}
-    // if (args.contains("-l")) {}
-    // if (args.contains("-l")) {}
-
-    println!(
-        "{:}, {:}, {:}, {:}",
-        stats.total_words, stats.total_lines, stats.total_bytes, stats.total_chars
-    )
+    println!("{}", output.join(" "));
 }
